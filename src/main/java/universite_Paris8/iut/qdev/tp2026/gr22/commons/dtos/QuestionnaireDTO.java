@@ -1,5 +1,7 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos;
 
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Difficulte;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,12 +116,12 @@ public class QuestionnaireDTO {
     /**
      * Récupère les questions par difficulté
      */
-    public List<QuestionDTO> getQuestionsParDifficulte(int difficulte) {
+    public List<QuestionDTO> getQuestionsParDifficulte(DifficulteDTO difficulte) {
         List<QuestionDTO> questionsDiff = new ArrayList<>();
         if (questions != null) {
             for (QuestionDTO question : questions) {
                 if (question.getDifficulte() != null &&
-                        question.getDifficulte().getDifficulte() == difficulte) {
+                        question.getDifficulte().getDifficulte().equals(difficulte)) {
                     questionsDiff.add(question);
                 }
             }
