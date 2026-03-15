@@ -1,6 +1,5 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos;
-
-import universite_Paris8.iut.qdev.tp2026.gr22.util.exception.Difficulte;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Difficulte;
 
 /**
  * DTO représentant la difficulté d'une question avec son système de points
@@ -9,10 +8,6 @@ public class DifficulteDTO {
 
     private Difficulte difficulte;  // SIMPLE, INTERMEDIAIRE ou EXPERT
     private int nbPoints;
-
-    // Constructeur par défaut
-    public DifficulteDTO() {
-    }
 
     // Constructeur avec paramètres (enum)
     public DifficulteDTO(Difficulte difficulte, int nbPoints) {
@@ -26,7 +21,6 @@ public class DifficulteDTO {
         this.nbPoints = nbPoints;
     }
 
-    // Getters et Setters
     public Difficulte getDifficulte() {
         return difficulte;
     }
