@@ -1,6 +1,6 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.commons.enums;
 
-public enum Difficulte {
+public enum DifficulteEnum {
 
     FACILE("Facile", 1),
     MOYEN("Moyen", 2),
@@ -9,7 +9,7 @@ public enum Difficulte {
     private final String libelle;
     private final int niveau;
 
-    Difficulte(String libelle, int niveau) {
+    DifficulteEnum(String libelle, int niveau) {
         this.libelle = libelle;
         this.niveau = niveau;
     }
@@ -26,8 +26,8 @@ public enum Difficulte {
      * Retourne le Difficulte correspondant à un niveau entier.
      * @throws IllegalArgumentException si le niveau n'existe pas
      */
-    public static Difficulte fromNiveau(int niveau) {
-        for (Difficulte d : values()) {
+    public static DifficulteEnum fromNiveau(int niveau) {
+        for (DifficulteEnum d : values()) {
             if (d.niveau == niveau) return d;
         }
         throw new IllegalArgumentException("Niveau de difficulté inconnu : " + niveau);

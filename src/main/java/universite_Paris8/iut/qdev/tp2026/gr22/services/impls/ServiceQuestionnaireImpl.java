@@ -1,8 +1,9 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.services.impls;
 
 import universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos.QuestionDTO;
-import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Difficulte;
-import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Langue;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos.QuestionnaireDTO;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.DifficulteEnum;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.LangueEnum;
 import universite_Paris8.iut.qdev.tp2026.gr22.services.interfaces.IServiceQuestionnaire;
 import universite_Paris8.iut.qdev.tp2026.gr22.util.exception.*;
 
@@ -32,7 +33,7 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
 
     @Override
     public List<String> chargerFichier(String cheminFichier)
-            throws ExceptionNotFound, ExceptionFichierNotExist, ExceptionFichierEmpty, ExceptionRecupFail {
+            throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
         validerChemin(cheminFichier);
         File fichier = getFichierValide(cheminFichier);
         List<String> lignes = lireLignes(fichier);
@@ -41,21 +42,22 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         return lignes;
     }
 
-    private void validerChemin(String chemin) throws ExceptionNotFound {
+    private void validerChemin(String chemin) throws NotFoundException {
         if (chemin == null || chemin.trim().isEmpty()) {
-            throw new ExceptionNotFound("Le chemin fourni est invalide : " + chemin);
+            throw new NotFoundException("Le chemin fourni est invalide : " + chemin);
         }
     }
 
-    private File getFichierValide(String chemin) throws ExceptionFichierNotExist {
+    private File getFichierValide(String chemin) throws FichierNotExistException {
         File fichier = new File(chemin);
         if (!fichier.exists() || !fichier.isFile()) {
-            throw new ExceptionFichierNotExist("Fichier introuvable : " + chemin);
+            throw new FichierNotExistException("Fichier introuvable : " + chemin);
         }
         return fichier;
     }
 
-    private List<String> lireLignes(File fichier) throws ExceptionRecupFail {
+    // ignore les lignes qui sont vides et mettre dans une liste
+    private List<String> lireLignes(File fichier) throws RecupFailException {
         List<String> lignes = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(fichier))) {
             String ligne;
@@ -63,14 +65,14 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
                 if (!ligne.trim().isEmpty()) lignes.add(ligne);
             }
         } catch (IOException e) {
-            throw new ExceptionRecupFail("Erreur de lecture : " + e.getMessage());
+            throw new RecupFailException("Erreur de lecture : " + e.getMessage());
         }
         return lignes;
     }
 
-    private void validerContenu(List<String> lignes, String chemin) throws ExceptionFichierEmpty {
+    private void validerContenu(List<String> lignes, String chemin) throws FichierEmptyException {
         if (lignes.isEmpty()) {
-            throw new ExceptionFichierEmpty("Le fichier est vide : " + chemin);
+            throw new FichierEmptyException("Le fichier est vide : " + chemin);
         }
     }
 
@@ -82,82 +84,90 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
+    // essaie de créer une question
     private void ajouterQuestionSiValide(String ligne) {
         try {
             this.questions.add(chargerQuestion(ligne));
-        } catch (ExceptionQuestionInvalid | ExceptionRecupFail e) {
+        } catch (QuestionInvalidException | RecupFailException e) {
             System.err.println("Ligne ignorée (format invalide) : " + ligne);
         }
     }
 
-    // -------------------------------------------------------
-    // chargerQuestion()
-    // -------------------------------------------------------
-
-    @Override
+    // Elle transforme une ligne du fichier en objet QuestionDTO
     public QuestionDTO chargerQuestion(String ligne)
-            throws ExceptionQuestionInvalid, ExceptionRecupFail {
+            throws QuestionInvalidException, RecupFailException {
         validerLigne(ligne);
         String[] parts = decouper(ligne);
         return construireQuestion(parts);
     }
 
-    private void validerLigne(String ligne) throws ExceptionQuestionInvalid {
+    private void validerLigne(String ligne) throws QuestionInvalidException {
         if (ligne == null || ligne.trim().isEmpty()) {
-            throw new ExceptionQuestionInvalid("La ligne est vide ou nulle.");
+            throw new QuestionInvalidException("La ligne est vide ou nulle.");
         }
     }
 
-    private String[] decouper(String ligne) throws ExceptionQuestionInvalid {
+    private String[] decouper(String ligne) throws QuestionInvalidException {
         String[] parts = ligne.split(SEPARATEUR, -1);
         if (parts.length < NB_CHAMPS) {
-            throw new ExceptionQuestionInvalid(
+            throw new QuestionInvalidException(
                     "Format invalide (attendu " + NB_CHAMPS + " champs) : " + ligne);
         }
         return parts;
     }
 
     private QuestionDTO construireQuestion(String[] parts)
-            throws ExceptionQuestionInvalid, ExceptionRecupFail {
+            throws QuestionInvalidException, RecupFailException {
         try {
             int id             = parseId(parts[0]);
             String libelle     = parts[1].trim();
             String theme       = parts[2].trim();
-            Difficulte diff    = parseDifficulte(parts[3]);
+            DifficulteEnum diff    = parseDifficulte(parts[3]);
             String reponse     = parts[4].trim();
             String explication = parts[5].trim();
             String reference   = parts[6].trim();
-            Langue langue      = parseLangue(parts[7]);
+            LangueEnum langue      = parseLangue(parts[7]);
             return new QuestionDTO(id, libelle, theme, diff, reponse, explication, reference, langue);
-        } catch (ExceptionQuestionInvalid e) {
+        } catch (QuestionInvalidException e) {
             throw e;
         } catch (Exception e) {
-            throw new ExceptionRecupFail("Erreur inattendue : " + e.getMessage());
+            throw new RecupFailException("Erreur inattendue : " + e.getMessage());
         }
     }
 
-    private int parseId(String valeur) throws ExceptionQuestionInvalid {
+    // Convertit une chaîne en int
+    private int parseId(String valeur) throws QuestionInvalidException {
         try {
             return Integer.parseInt(valeur.trim());
         } catch (NumberFormatException e) {
-            throw new ExceptionQuestionInvalid("ID non entier : " + valeur);
+            throw new QuestionInvalidException("ID non entier : " + valeur);
         }
     }
 
-    private Difficulte parseDifficulte(String valeur) throws ExceptionQuestionInvalid {
+    // Convertit une chaîne en enum Difficulte
+    private DifficulteEnum parseDifficulte(String valeur) throws QuestionInvalidException {
         try {
-            return Difficulte.valueOf(valeur.trim().toUpperCase());
+            return DifficulteEnum.valueOf(valeur.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ExceptionQuestionInvalid("Difficulté invalide : " + valeur);
+            throw new QuestionInvalidException("Difficulté invalide : " + valeur);
         }
     }
 
-    private Langue parseLangue(String valeur) throws ExceptionQuestionInvalid {
+    // Convertit une chaîne en enum Langue
+    private LangueEnum parseLangue(String valeur) throws QuestionInvalidException {
         try {
-            return Langue.valueOf(valeur.trim().toUpperCase());
+            return LangueEnum.valueOf(valeur.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ExceptionQuestionInvalid("Langue invalide : " + valeur);
+            throw new QuestionInvalidException("Langue invalide : " + valeur);
         }
+    }
+
+    // -------------------------------------------------------
+    // fournirQuestionnaire(String cheminFichier)
+    // -------------------------------------------------------
+    @Override
+    public QuestionnaireDTO fournirQuestionnaire(String cheminFichier) throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
+        return null;
     }
 
     // -------------------------------------------------------
@@ -165,15 +175,15 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
     // -------------------------------------------------------
 
     @Override
-    public QuestionDTO getQuestion() throws ExceptionNotFound {
+    public QuestionDTO getQuestion() throws NotFoundException {
         verifierQuestionsDisponibles();
         reinitialiserSiNecessaire();
         return questions.get(indexCourant++);
     }
 
-    private void verifierQuestionsDisponibles() throws ExceptionNotFound {
+    private void verifierQuestionsDisponibles() throws NotFoundException {
         if (questions == null || questions.isEmpty()) {
-            throw new ExceptionNotFound("Aucune question disponible. Chargez d'abord un fichier.");
+            throw new NotFoundException("Aucune question disponible. Chargez d'abord un fichier.");
         }
     }
 

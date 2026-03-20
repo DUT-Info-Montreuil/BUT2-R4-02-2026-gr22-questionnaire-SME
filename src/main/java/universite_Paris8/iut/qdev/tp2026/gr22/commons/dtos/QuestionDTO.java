@@ -1,21 +1,21 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos;
 
-import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Langue;
-import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Difficulte;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.LangueEnum;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.DifficulteEnum;
 
 public class QuestionDTO {
 
     private int id;
     private String libelle;
     private String theme;
-    private Difficulte difficulte;
+    private DifficulteEnum difficulte;
     private String reponse;
     private String explication;
     private String reference;
-    private Langue langue;
+    private LangueEnum langue;
 
-    public QuestionDTO(int id, String libelle, String theme, Difficulte difficulte,
-                       String reponse, String explication, String reference, Langue langue) {
+    public QuestionDTO(int id, String libelle, String theme, DifficulteEnum difficulte,
+                       String reponse, String explication, String reference, LangueEnum langue) {
         this.id = id;
         this.libelle = libelle;
         this.theme = theme;
@@ -35,8 +35,8 @@ public class QuestionDTO {
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
 
-    public Difficulte getDifficulte() { return difficulte; }
-    public void setDifficulte(Difficulte difficulte) { this.difficulte = difficulte; }
+    public DifficulteEnum getDifficulte() { return difficulte; }
+    public void setDifficulte(DifficulteEnum difficulte) { this.difficulte = difficulte; }
 
     public String getReponse() { return reponse; }
     public void setReponse(String reponse) { this.reponse = reponse; }
@@ -47,8 +47,8 @@ public class QuestionDTO {
     public String getReference() { return reference; }
     public void setReference(String reference) { this.reference = reference; }
 
-    public Langue getLangue() { return langue; }
-    public void setLangue(Langue langue) { this.langue = langue; }
+    public LangueEnum getLangue() { return langue; }
+    public void setLangue(LangueEnum langue) { this.langue = langue; }
 
     @Override
     public String toString() {

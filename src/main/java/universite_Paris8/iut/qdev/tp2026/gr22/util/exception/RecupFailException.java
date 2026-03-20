@@ -1,12 +1,12 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.util.exception;
 
-public class ExceptionRecupFail extends Exception {
+public class RecupFailException extends Exception {
 
-    public ExceptionRecupFail(String message) {
+    public RecupFailException(String message) {
         super(message);
     }
 
-    public ExceptionRecupFail() {
+    public RecupFailException() {
         super("La récupération des données a échoué.");
     }
 }

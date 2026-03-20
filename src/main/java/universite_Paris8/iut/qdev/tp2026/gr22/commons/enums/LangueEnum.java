@@ -1,12 +1,12 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.commons.enums;
 
-public enum Langue {
+public enum LangueEnum {
     FRANCAIS(1),
     ANGLAIS(2);
 
     private final int valeur;
 
-    Langue(int valeur) {
+    LangueEnum(int valeur) {
         this.valeur = valeur;
     }
 

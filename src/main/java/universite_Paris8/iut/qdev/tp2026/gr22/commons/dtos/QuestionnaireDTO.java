@@ -1,6 +1,6 @@
 package universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos;
 
-import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.Langue;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.LangueEnum;
 
 import java.util.List;
 
@@ -9,10 +9,10 @@ public class QuestionnaireDTO {
     private int id;
     private String libelle;
     private List<QuestionDTO> questions;
-    private Langue langue;
+    private LangueEnum langue;
     private int nb_question;
 
-    public QuestionnaireDTO(int id, String libelle, List<QuestionDTO> questions, Langue langue) {
+    public QuestionnaireDTO(int id, String libelle, List<QuestionDTO> questions, LangueEnum langue) {
         this.id = id;
         this.libelle = libelle;
         this.questions = questions;
@@ -32,8 +32,8 @@ public class QuestionnaireDTO {
         this.nb_question = (questions != null) ? questions.size() : 0;
     }
 
-    public Langue getLangue() { return langue; }
-    public void setLangue(Langue langue) { this.langue = langue; }
+    public LangueEnum getLangue() { return langue; }
+    public void setLangue(LangueEnum langue) { this.langue = langue; }
 
     public int getNb_question() { return nb_question; }
 
