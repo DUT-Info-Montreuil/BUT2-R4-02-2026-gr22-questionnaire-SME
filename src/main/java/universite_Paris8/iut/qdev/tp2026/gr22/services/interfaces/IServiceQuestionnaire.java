@@ -22,11 +22,22 @@ public interface IServiceQuestionnaire {
             throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException;
 
     /**
-     * Retourne le questionnaire chargé en mémoire.
-     * Si aucun questionnaire n'est encore chargé, le charge depuis le fichier.
+     * Parse une ligne de texte et retourne un QuestionDTO.
      *
-     * @param cheminFichier chemin vers le fichier source
-     * @return QuestionnaireDTO chargé
+     * @param ligne ligne brute à parser
+     * @return QuestionDTO construit depuis la ligne
+     * @throws QuestionInvalidException si la ligne est mal formatée
+     * @throws RecupFailException       si la récupération échoue
+     */
+    QuestionDTO chargerQuestion(String ligne)
+            throws QuestionInvalidException, RecupFailException;
+
+    /**
+     * Nom       : fournirQuestionnaire()
+     * Retourne  : QuestionnaireDTO
+     * Paramètre : String cheminFichier
+     * Exceptions: NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException
+     * Signature : public QuestionnaireDTO fournirQuestionnaire(String cheminFichier)
      */
     QuestionnaireDTO fournirQuestionnaire(String cheminFichier)
             throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException;

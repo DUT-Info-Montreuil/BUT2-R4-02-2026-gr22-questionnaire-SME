@@ -14,18 +14,9 @@ public enum DifficulteEnum {
         this.niveau = niveau;
     }
 
-    public String getLibelle() {
-        return libelle;
-    }
+    public String getLibelle() { return libelle; }
+    public int getNiveau() { return niveau; }
 
-    public int getNiveau() {
-        return niveau;
-    }
-
-    /**
-     * Retourne le Difficulte correspondant à un niveau entier.
-     * @throws IllegalArgumentException si le niveau n'existe pas
-     */
     public static DifficulteEnum fromNiveau(int niveau) {
         for (DifficulteEnum d : values()) {
             if (d.niveau == niveau) return d;

@@ -17,13 +17,15 @@ import java.util.List;
 public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
 
     private static final String SEPARATEUR = ";";
-    private static final int NB_CHAMPS = 8;
+    private static final int NB_CHAMPS = 9;
 
     private List<QuestionDTO> questions;
+    private QuestionnaireDTO questionnaire;
     private int indexCourant;
 
     public ServiceQuestionnaireImpl() {
         this.questions = new ArrayList<>();
+        this.questionnaire = null;
         this.indexCourant = 0;
     }
 
@@ -56,7 +58,6 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         return fichier;
     }
 
-    // ignore les lignes qui sont vides et mettre dans une liste
     private List<String> lireLignes(File fichier) throws RecupFailException {
         List<String> lignes = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(fichier))) {
@@ -84,7 +85,6 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
-    // essaie de créer une question
     private void ajouterQuestionSiValide(String ligne) {
         try {
             this.questions.add(chargerQuestion(ligne));
@@ -93,7 +93,11 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
-    // Elle transforme une ligne du fichier en objet QuestionDTO
+    // -------------------------------------------------------
+    // chargerQuestion()
+    // -------------------------------------------------------
+
+    @Override
     public QuestionDTO chargerQuestion(String ligne)
             throws QuestionInvalidException, RecupFailException {
         validerLigne(ligne);
@@ -119,14 +123,15 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
     private QuestionDTO construireQuestion(String[] parts)
             throws QuestionInvalidException, RecupFailException {
         try {
-            int id             = parseId(parts[0]);
-            String libelle     = parts[1].trim();
-            String theme       = parts[2].trim();
-            DifficulteEnum diff    = parseDifficulte(parts[3]);
-            String reponse     = parts[4].trim();
-            String explication = parts[5].trim();
-            String reference   = parts[6].trim();
-            LangueEnum langue      = parseLangue(parts[7]);
+            // Format CSV : idQuestionnaire;libelleQuestionnaire;idQuestion;langue;libelle;reponse;difficulte;explication;reference
+            int id                = parseId(parts[2]);
+            String libelle        = parts[4].trim();
+            String theme          = parts[1].trim();
+            LangueEnum langue     = parseLangue(parts[3]);
+            String reponse        = parts[5].trim();
+            DifficulteEnum diff   = parseDifficulte(parts[6]);
+            String explication    = parts[7].trim();
+            String reference      = parts[8].trim();
             return new QuestionDTO(id, libelle, theme, diff, reponse, explication, reference, langue);
         } catch (QuestionInvalidException e) {
             throw e;
@@ -135,7 +140,6 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
-    // Convertit une chaîne en int
     private int parseId(String valeur) throws QuestionInvalidException {
         try {
             return Integer.parseInt(valeur.trim());
@@ -144,30 +148,29 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
-    // Convertit une chaîne en enum Difficulte
     private DifficulteEnum parseDifficulte(String valeur) throws QuestionInvalidException {
         try {
-            return DifficulteEnum.valueOf(valeur.trim().toUpperCase());
+            int niveau = Integer.parseInt(valeur.trim());
+            return DifficulteEnum.fromNiveau(niveau);
+        } catch (NumberFormatException e) {
+            try {
+                return DifficulteEnum.valueOf(valeur.trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new QuestionInvalidException("Difficulté invalide : " + valeur);
+            }
         } catch (IllegalArgumentException e) {
             throw new QuestionInvalidException("Difficulté invalide : " + valeur);
         }
     }
 
-    // Convertit une chaîne en enum Langue
     private LangueEnum parseLangue(String valeur) throws QuestionInvalidException {
-        try {
-            return LangueEnum.valueOf(valeur.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new QuestionInvalidException("Langue invalide : " + valeur);
+        switch (valeur.trim().toLowerCase()) {
+            case "fr":       return LangueEnum.FRANCAIS;
+            case "en":       return LangueEnum.ANGLAIS;
+            case "francais": return LangueEnum.FRANCAIS;
+            case "anglais":  return LangueEnum.ANGLAIS;
+            default: throw new QuestionInvalidException("Langue invalide : " + valeur);
         }
-    }
-
-    // -------------------------------------------------------
-    // fournirQuestionnaire(String cheminFichier)
-    // -------------------------------------------------------
-    @Override
-    public QuestionnaireDTO fournirQuestionnaire(String cheminFichier) throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
-        return null;
     }
 
     // -------------------------------------------------------
@@ -193,13 +196,34 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
-    public List<QuestionDTO> getQuestions(){
-        return questions;
+    // -------------------------------------------------------
+    // fournirQuestionnaire()
+    // -------------------------------------------------------
+
+    @Override
+    public QuestionnaireDTO fournirQuestionnaire(String cheminFichier)
+            throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
+        QuestionnaireDTO q = questionnaire;
+        if (questionnaireEstDisponible(q)) return q;
+        return chargerEtRetournerQuestionnaire(cheminFichier);
     }
-    public int getNbQuestions(){
-        return (questions != null) ? questions.size() : 0;
+
+    private boolean questionnaireEstDisponible(QuestionnaireDTO q) {
+        return q != null;
     }
-    public void resetIndex(){
-        this.indexCourant = 0;
+
+    private QuestionnaireDTO chargerEtRetournerQuestionnaire(String cheminFichier)
+            throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
+        chargerFichier(cheminFichier);
+        questionnaire = new QuestionnaireDTO(1, cheminFichier, questions, null);
+        return questionnaire;
     }
+
+    // -------------------------------------------------------
+    // Accesseurs utilitaires
+    // -------------------------------------------------------
+
+    public List<QuestionDTO> getQuestions()  { return questions; }
+    public int getNbQuestions()              { return (questions != null) ? questions.size() : 0; }
+    public void resetIndex()                 { this.indexCourant = 0; }
 }
