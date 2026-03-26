@@ -20,20 +20,18 @@ public class QuestionnaireDTO {
         this.nb_question = (questions != null) ? questions.size() : 0;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public String getLibelle() {
+        return libelle;
+    }
 
-    public String getLibelle() { return libelle; }
-    public void setLibelle(String libelle) { this.libelle = libelle; }
+    public List<QuestionDTO> getQuestions() {
+        return questions;
+    }
 
-    public List<QuestionDTO> getQuestions() { return questions; }
     public void setQuestions(List<QuestionDTO> questions) {
         this.questions = questions;
         this.nb_question = (questions != null) ? questions.size() : 0;
     }
-
-    public LangueEnum getLangue() { return langue; }
-    public void setLangue(LangueEnum langue) { this.langue = langue; }
 
     public int getNb_question() { return nb_question; }
 

@@ -6,8 +6,8 @@ import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.DifficulteEnum;
  */
 public class DifficulteDTO {
 
-    private DifficulteEnum difficulte;  // SIMPLE, INTERMEDIAIRE ou EXPERT
-    private int nbPoints;
+    private final DifficulteEnum difficulte;  // SIMPLE, INTERMEDIAIRE ou EXPERT
+    private final int nbPoints;
 
     // Constructeur avec paramètres (enum)
     public DifficulteDTO(DifficulteEnum difficulte, int nbPoints) {
@@ -19,36 +19,6 @@ public class DifficulteDTO {
     public DifficulteDTO(int niveauDifficulte, int nbPoints) {
         this.difficulte = DifficulteEnum.fromNiveau(niveauDifficulte);
         this.nbPoints = nbPoints;
-    }
-
-    public DifficulteEnum getDifficulte() {
-        return difficulte;
-    }
-
-    public void setDifficulte(DifficulteEnum difficulte) {
-        this.difficulte = difficulte;
-    }
-
-    public void setDifficulte(int niveauDifficulte) {
-        this.difficulte = DifficulteEnum.fromNiveau(niveauDifficulte);
-    }
-
-    public int getNbPoints() {
-        return nbPoints;
-    }
-
-    public void setNbPoints(int nbPoints) {
-        this.nbPoints = nbPoints;
-    }
-
-    // Méthode utilitaire pour obtenir le niveau (1, 2 ou 3)
-    public int getNiveau() {
-        return difficulte != null ? difficulte.getNiveau() : 0;
-    }
-
-    // Méthode utilitaire pour obtenir le libellé
-    public String getLibelleDifficulte() {
-        return difficulte != null ? difficulte.getLibelle() : "Inconnu";
     }
 
     @Override

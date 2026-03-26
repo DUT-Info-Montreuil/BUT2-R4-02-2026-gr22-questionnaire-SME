@@ -6,7 +6,7 @@ public enum LangueEnum {
 
     private final int valeur;
 
-    LangueEnum(int valeur) { this.valeur = valeur; }
-
-    public int getValeur() { return valeur; }
+    LangueEnum(int valeur) {
+        this.valeur = valeur;
+    }
 }

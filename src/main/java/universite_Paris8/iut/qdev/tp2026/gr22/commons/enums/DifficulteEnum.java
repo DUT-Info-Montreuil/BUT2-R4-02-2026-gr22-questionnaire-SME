@@ -14,8 +14,9 @@ public enum DifficulteEnum {
         this.niveau = niveau;
     }
 
-    public String getLibelle() { return libelle; }
-    public int getNiveau() { return niveau; }
+    public int getNiveau() {
+        return niveau;
+    }
 
     public static DifficulteEnum fromNiveau(int niveau) {
         for (DifficulteEnum d : values()) {
