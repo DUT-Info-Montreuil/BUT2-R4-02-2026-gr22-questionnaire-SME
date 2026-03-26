@@ -2,6 +2,7 @@ package universite_Paris8.iut.qdev.tp2026.gr22.services.impls;
 
 import universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos.QuestionDTO;
 import universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos.QuestionnaireDTO;
+import universite_Paris8.iut.qdev.tp2026.gr22.commons.dtos.DifficulteDTO;
 import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.DifficulteEnum;
 import universite_Paris8.iut.qdev.tp2026.gr22.commons.enums.LangueEnum;
 import universite_Paris8.iut.qdev.tp2026.gr22.services.interfaces.IServiceQuestionnaire;
@@ -9,8 +10,10 @@ import universite_Paris8.iut.qdev.tp2026.gr22.util.exception.*;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.nio.file.Files;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,15 +36,13 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
     // chargerFichier()
     // -------------------------------------------------------
 
-    @Override
-    public List<String> chargerFichier(String cheminFichier)
+    public void chargerFichier(String cheminFichier)
             throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
         validerChemin(cheminFichier);
         File fichier = getFichierValide(cheminFichier);
         List<String> lignes = lireLignes(fichier);
         validerContenu(lignes, cheminFichier);
         chargerQuestionsDepuisLignes(lignes);
-        return lignes;
     }
 
     private void validerChemin(String chemin) throws NotFoundException {
@@ -60,15 +61,27 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
 
     private List<String> lireLignes(File fichier) throws RecupFailException {
         List<String> lignes = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(fichier))) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(Files.newInputStream(fichier.toPath()), StandardCharsets.UTF_8))) {
             String ligne;
+            boolean premiereLigne = true;
             while ((ligne = reader.readLine()) != null) {
-                if (!ligne.trim().isEmpty()) lignes.add(ligne);
+                ligne = nettoyerLigne(ligne, premiereLigne);
+                premiereLigne = false;
+                if (!ligne.isEmpty()) lignes.add(ligne);
             }
         } catch (IOException e) {
             throw new RecupFailException("Erreur de lecture : " + e.getMessage());
         }
         return lignes;
+    }
+
+    private String nettoyerLigne(String ligne, boolean premiereLigne) {
+        ligne = ligne.trim();
+        if (premiereLigne && ligne.startsWith("\uFEFF")) {
+            ligne = ligne.substring(1);
+        }
+        return ligne;
     }
 
     private void validerContenu(List<String> lignes, String chemin) throws FichierEmptyException {
@@ -97,7 +110,6 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
     // chargerQuestion()
     // -------------------------------------------------------
 
-    @Override
     public QuestionDTO chargerQuestion(String ligne)
             throws QuestionInvalidException, RecupFailException {
         validerLigne(ligne);
@@ -124,14 +136,14 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
             throws QuestionInvalidException, RecupFailException {
         try {
             // Format CSV : idQuestionnaire;libelleQuestionnaire;idQuestion;langue;libelle;reponse;difficulte;explication;reference
-            int id                = parseId(parts[2]);
-            String libelle        = parts[4].trim();
-            String theme          = parts[1].trim();
-            LangueEnum langue     = parseLangue(parts[3]);
-            String reponse        = parts[5].trim();
-            DifficulteEnum diff   = parseDifficulte(parts[6]);
-            String explication    = parts[7].trim();
-            String reference      = parts[8].trim();
+            int id              = parseId(parts[2]);
+            String theme        = parts[1].trim();
+            LangueEnum langue   = parseLangue(parts[3]);
+            String libelle      = parts[4].trim();
+            String reponse      = parts[5].trim();
+            DifficulteDTO diff  = parseDifficulte(parts[6]);
+            String explication  = parts[7].trim();
+            String reference    = parts[8].trim();
             return new QuestionDTO(id, libelle, theme, diff, reponse, explication, reference, langue);
         } catch (QuestionInvalidException e) {
             throw e;
@@ -148,13 +160,14 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         }
     }
 
-    private DifficulteEnum parseDifficulte(String valeur) throws QuestionInvalidException {
+    private DifficulteDTO parseDifficulte(String valeur) throws QuestionInvalidException {
         try {
-            int niveau = Integer.parseInt(valeur.trim());
-            return DifficulteEnum.fromNiveau(niveau);
+            DifficulteEnum niveau = DifficulteEnum.fromNiveau(Integer.parseInt(valeur.trim()));
+            return new DifficulteDTO(niveau, niveau.getNiveau());
         } catch (NumberFormatException e) {
             try {
-                return DifficulteEnum.valueOf(valeur.trim().toUpperCase());
+                DifficulteEnum niveau = DifficulteEnum.valueOf(valeur.trim().toUpperCase());
+                return new DifficulteDTO(niveau, niveau.getNiveau());
             } catch (IllegalArgumentException ex) {
                 throw new QuestionInvalidException("Difficulté invalide : " + valeur);
             }
@@ -177,7 +190,6 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
     // getQuestion()
     // -------------------------------------------------------
 
-    @Override
     public QuestionDTO getQuestion() throws NotFoundException {
         verifierQuestionsDisponibles();
         reinitialiserSiNecessaire();
@@ -200,16 +212,14 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
     // fournirQuestionnaire()
     // -------------------------------------------------------
 
-    @Override
     public QuestionnaireDTO fournirQuestionnaire(String cheminFichier)
             throws NotFoundException, FichierNotExistException, FichierEmptyException, RecupFailException {
-        QuestionnaireDTO q = questionnaire;
-        if (questionnaireEstDisponible(q)) return q;
+        if (questionnaireEstDisponible()) return questionnaire;
         return chargerEtRetournerQuestionnaire(cheminFichier);
     }
 
-    private boolean questionnaireEstDisponible(QuestionnaireDTO q) {
-        return q != null;
+    private boolean questionnaireEstDisponible() {
+        return questionnaire != null;
     }
 
     private QuestionnaireDTO chargerEtRetournerQuestionnaire(String cheminFichier)
@@ -218,12 +228,4 @@ public class ServiceQuestionnaireImpl implements IServiceQuestionnaire {
         questionnaire = new QuestionnaireDTO(1, cheminFichier, questions, null);
         return questionnaire;
     }
-
-    // -------------------------------------------------------
-    // Accesseurs utilitaires
-    // -------------------------------------------------------
-
-    public List<QuestionDTO> getQuestions()  { return questions; }
-    public int getNbQuestions()              { return (questions != null) ? questions.size() : 0; }
-    public void resetIndex()                 { this.indexCourant = 0; }
 }
